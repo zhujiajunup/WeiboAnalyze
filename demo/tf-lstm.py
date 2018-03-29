@@ -135,15 +135,22 @@ def getTestBatch():
 
 tf.reset_default_graph()
 
-labels = tf.placeholder(tf.float32, [batchSize, numClasses])
-input_data = tf.placeholder(tf.int32, [batchSize, maxSeqLength])
+with tf.name_scope('input'):
+    labels = tf.placeholder(tf.float32, [batchSize, numClasses], name='labels')
+    input_data = tf.placeholder(tf.int32, [batchSize, maxSeqLength], name='x')
 data = tf.Variable(tf.zeros([batchSize, maxSeqLength, numDimensions]), dtype=tf.float32)
 data = tf.nn.embedding_lookup(wordVectors, input_data)
 lstmCell = tf.contrib.rnn.BasicLSTMCell(lstmUnits)
 lstmCell = tf.contrib.rnn.DropoutWrapper(cell=lstmCell, output_keep_prob=0.75)
 value, _ = tf.nn.dynamic_rnn(lstmCell, data, dtype=tf.float32)
 
-weight = tf.Variable(tf.truncated_normal([lstmUnits, numClasses]))
+
+def weight_variable(shape):
+    return tf.Variable(tf.truncated_normal(shape))
+
+
+
+weight = weight_variable([lstmUnits, numClasses])
 variable_summaries(weight, 'weight')
 
 bias = tf.Variable(tf.constant(0.1, shape=[numClasses]))
